@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import scipy
+from scipy import stats
 MyData=pd.read_csv("D:\Python classes\houseRent\houseRent\housing_train.csv")
-
+MyData.dtypes
 #### You can check the type of the Dataframe
 ####You can use fillna with 0 and then check the count
 ######Visualising the data#####
@@ -23,10 +25,10 @@ count=MyData.isna().sum()
 #Keeping the original dataset untouched and transferring it to x
 x=MyData
 
-#Dropping the Latitude column as there are very less values
+#Dropping the null values in Latitude column as there are very less values
 x.dropna(subset = ["lat"], inplace=True)
 
-#Dropping the Description column as there are very less values
+#Dropping the null valuesDescription column as there are very less values
 x.dropna(subset = ["description"], inplace=True)
 
 #Filling the Laundry options column with No Info to make it another category
@@ -41,39 +43,100 @@ count=x.isna().sum()
 
 ###Now the data has no NULL Values###
 
+########## Feature Enginering ############
+
+#Checking for unique/distinct values in each independent variable.
+#This will help to decide which ones need dummy variable treatment and not
+#
+
+# Finding the data type of each column
+x.dtypes
+for col in x.columns:
+    print(col.ljust(30),': ',len(x[col].unique()),'labels'.ljust(10),' : ',x[col].dtype)
+
+
+
+####Making of a duplicate dataset to prevent overlapping 
+
+v=x
+####Making the dummy variable for LAUNDRY_OPTIONS
+dummies = pd.get_dummies(v.laundry_options)
+#Merge the data
+merged = pd.concat([v,dummies],axis='columns')
+merged.shape
+merged = merged.drop('laundry_options',axis=1)
+merged = merged.drop('noinfo',axis=1)
+list(merged.columns)
+
+for col in merged.columns:
+    print(col.ljust(30),': ',len(merged[col].unique()),'labels'.ljust(10),' : ',merged[col].dtype)
+
+
+
+
+####Making the dummy variable for PARKING_OPTIONS
+dummies = pd.get_dummies(merged.parking_options)
+merged = pd.concat([merged,dummies],axis='columns')
+merged = merged.drop('parking_options',axis=1)
+merged = merged.drop('noinfo',axis=1)
+
+list(merged.columns)
+
+for col in merged.columns:
+    print(col.ljust(30),': ',len(merged[col].unique()),'labels'.ljust(10),' : ',merged[col].dtype)
 
 
 ######Outlier Identification#######
 #####Checking for outliers#########
 
-x.describe()
+#Dropping the description Column for now
 
 
-sns.boxplot(x[])
-MyData['price'].plot()
-plt.hist(MyData['price'].values)
+#Visualising the particular feature for outliers
 
-fig, ax = plt.subplots(figsize=(16,8))
-ax.scatter(MyData['sqfeet'],MyData['price'])
+
+#### BEDS ########
+sns.boxplot(merged[])
+merged['beds'].plot()
+plt.hist(merged['beds'].values)
+
+fig, ax = plt.subplots(figsize=(8,8))
+ax.scatter(merged['beds'],merged['price'])
 plt.show()
 
 ########Using Z-Scores to find outliers######
 
 ##### We can also use SCIPY for stats
-'''
-from scipy import stats
-import numpy as np
-z = np.abs(stats.zscore(MyData['price']))
-print(z)
-threshold=3
-print(np.where(z>3))
 
-mydata_clean = MyData
-mydata_clean = MyData[(z<3).all(axis=1)]
+z_scores = scipy.stats.zscore(merged['beds'])
+abs_z_scores = np.abs(z_scores)
+filtered_entries = (abs_z_scores < 3)
+merged = merged[filtered_entries]
 
-'''
 ######
 
+####### BATHS####
+
+sns.boxplot(merged[])
+merged['baths'].plot()
+plt.hist(merged['baths'].values)
+
+fig, ax = plt.subplots(figsize=(8,8))
+ax.scatter(merged['baths'],merged['price'])
+plt.show()
+
+########Using Z-Scores to find outliers######
+
+##### We can also use SCIPY for stats
+
+z_scores = scipy.stats.zscore(merged['baths'])
+abs_z_scores = np.abs(z_scores)
+filtered_entries = (abs_z_scores < 3)
+merged = merged[filtered_entries]
+
+
+'''
+outliers=[]
 def detect_outlier(data_1):
     
     threshold=3
@@ -86,8 +149,42 @@ def detect_outlier(data_1):
             outliers.append(y)
     return outliers
 
-outlier_datapoints = detect_outlier(MyData['price'])
+outlier_datapoints = detect_outlier(merged['beds'])
 print(outlier_datapoints)
+'''
+
+
+
+'''
+###### MODIFIED Z Score Method #########
+
+def outliers_modified_z_score(ys):
+    threshold = 3.5
+    median_y = np.median(ys)
+    median_absolute_deviation_y = np.median([np.abs(y - median_y) for y in ys])
+    
+    for y in ys:
+        modified_z_scores = 0.6745 * (y - median_y) / median_absolute_deviation_y
+        if(np.abs(modified_z_scores) > threshold):
+            outliers.append(y)
+    return outliers
+
+
+outlier_datapoints = detect_outlier(qwert['sqfeet'])
+print(outlier_datapoints)
+'''
+
+
+
+'''
+def outliers_iqr(ys):
+    quartile_1, quartile_3 = np.percentile(ys, [25, 75])
+    iqr = quartile_3 - quartile_1
+    lower_bound = quartile_1 - (iqr * 1.5)
+    upper_bound = quartile_3 + (iqr * 1.5)
+    return np.where((ys > upper_bound) | (ys < lower_bound))
+'''
+
 
 ######CLEANING DATA (Removing outliers)
 
@@ -96,21 +193,31 @@ print(outlier_datapoints)
 
 
 
+
 ###########Using IQR to find outliers########
-a=sorted(MyData['price'])
-q1, q3= np.percentile(a,[25,75])
-
-
-
+'''
+#### Percentile Method   ####
+sns.boxplot(merged['sqfeet'])
+qwe=[]
+q1, q3= np.percentile(merged['sqfeet'],[25,75])
 iqr = q3 - q1
 lower_bound = q1 -(1.5 * iqr) 
 upper_bound = q3 +(1.5 * iqr)
 
-#OR
-#Q1=MyData['price'].quantile(0.25)
-#Q3=MyData['price'].quantile(0.75)
-#IQR=Q3-Q1
-#print(IQR)
-#print(MyData['price']>(Q1-1.5*IQR)) and (MyData['price']<(Q3+1.5*IQR))
+'''
+
+####### Quantile Method  ####
+merged1=merged
+Q1=merged['sqfeet'].quantile(0.25)
+Q3=merged['sqfeet'].quantile(0.75)
+IQR=Q3-Q1
+LB = Q1-(1.5*IQR)
+UB = Q3+(1.5*IQR)
+
+
+merged1= merged[merged['sqfeet'].between(LB, UB)]
+sns.boxplot(merged1['sqfeet'])
+
+
 
 ######CLEANING DATA (Removing outliers)
