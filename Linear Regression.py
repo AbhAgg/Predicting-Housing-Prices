@@ -57,7 +57,7 @@ for col in x.columns:
 
 
 ####Making of a duplicate dataset to prevent overlapping 
-
+##################################################### LAUNDRY ###################
 v=x
 ####Making the dummy variable for LAUNDRY_OPTIONS
 dummies = pd.get_dummies(v.laundry_options)
@@ -72,14 +72,16 @@ for col in merged.columns:
     print(col.ljust(30),': ',len(merged[col].unique()),'labels'.ljust(10),' : ',merged[col].dtype)
 
 
+##### Find the count of unique/individual labes in a particular feature ####
 
+
+#################################################### PARKING ################# 
 
 ####Making the dummy variable for PARKING_OPTIONS
 dummies = pd.get_dummies(merged.parking_options)
 merged = pd.concat([merged,dummies],axis='columns')
 merged = merged.drop('parking_options',axis=1)
 merged = merged.drop('noinfo',axis=1)
-
 list(merged.columns)
 
 for col in merged.columns:
@@ -95,14 +97,38 @@ for col in merged.columns:
 #Visualising the particular feature for outliers
 
 
-#### BEDS ########
-sns.boxplot(merged[])
-merged['beds'].plot()
-plt.hist(merged['beds'].values)
+#############################################   BEDS     ###########
+
+merged.beds.value_counts().sort_values(ascending=False).head(20)
+
+
+
+merged1 = merged
+
+sns.boxplot(merged1['beds'])
+merged1['beds'].plot()
+plt.hist(merged1['beds'].values)
 
 fig, ax = plt.subplots(figsize=(8,8))
-ax.scatter(merged['beds'],merged['price'])
+ax.scatter(merged1['beds'],merged1['price'])
 plt.show()
+
+
+###Counting the value of each type of beds
+merged1.beds.value_counts()
+
+##Manually removing the outliers###
+merged1=merged1[merged1['beds']<300]
+
+###Counting again the value of each type of beds
+merged1.beds.value_counts()
+
+
+
+'''
+
+NOT NEEDED HERE
+
 
 ########Using Z-Scores to find outliers######
 
@@ -112,19 +138,29 @@ z_scores = scipy.stats.zscore(merged['beds'])
 abs_z_scores = np.abs(z_scores)
 filtered_entries = (abs_z_scores < 3)
 merged = merged[filtered_entries]
+'''
 
-######
 
-####### BATHS####
 
-sns.boxplot(merged[])
-merged['baths'].plot()
-plt.hist(merged['baths'].values)
+#############################################   BATHS   ############
+
+sns.boxplot(merged1['baths'])
+merged1['baths'].plot()
+plt.hist(merged1['baths'].values)
 
 fig, ax = plt.subplots(figsize=(8,8))
-ax.scatter(merged['baths'],merged['price'])
+ax.scatter(merged1['baths'],merged1['price'])
 plt.show()
 
+
+###Counting the value of each type of baths
+merged1.baths.value_counts()
+merged1=merged1[merged1['baths']<5]
+merged1.baths.value_counts()
+
+##### No need to eliminate any outliers (But there is a scope of improvement)
+
+'''
 ########Using Z-Scores to find outliers######
 
 ##### We can also use SCIPY for stats
@@ -134,6 +170,7 @@ abs_z_scores = np.abs(z_scores)
 filtered_entries = (abs_z_scores < 3)
 merged = merged[filtered_entries]
 
+'''
 
 '''
 outliers=[]
@@ -186,12 +223,44 @@ def outliers_iqr(ys):
 '''
 
 
-######CLEANING DATA (Removing outliers)
+#############################################   IMAGE URL   ############
+
+
+# Creating an addition boolean column for presence of images
+merged1['bool_imageurl'] = 1
+
+#dropping the image_url column 
+merged1 = merged1.drop('image_url',axis=1)
+
+
+#############################################   Description   ############
+
+
+# Creating an addition boolean column for presence of description
+merged1['bool_description'] = 1
+
+#dropping the description column 
+merged1 = merged1.drop('description',axis=1)
+
+
+########################################## PRICE ########################
+
+sns.boxplot(merged1['price'])
+merged1['price'].plot()
+plt.hist(merged1['price'].values)
+
+fig, ax = plt.subplots(figsize=(8,8))
+ax.scatter(merged1['price'],merged1['price'])
+plt.show()
+
+
+merged1=merged1[merged1['price']<7000]
+merged1.price.value_counts()
 
 
 
 
-
+#############################################   SQFEET AREA  ############
 
 
 ###########Using IQR to find outliers########
@@ -217,6 +286,19 @@ UB = Q3+(1.5*IQR)
 
 merged1= merged[merged['sqfeet'].between(LB, UB)]
 sns.boxplot(merged1['sqfeet'])
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
