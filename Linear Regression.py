@@ -132,7 +132,7 @@ NOT NEEDED HERE
 
 ########Using Z-Scores to find outliers######
 
-##### We can also use SCIPY for stats
+##### We can also use SCIPY for statsf
 
 z_scores = scipy.stats.zscore(merged['beds'])
 abs_z_scores = np.abs(z_scores)
@@ -243,7 +243,7 @@ merged1['bool_description'] = 1
 merged1 = merged1.drop('description',axis=1)
 
 
-########################################## PRICE ########################
+##############################################   PRICE ########################
 
 sns.boxplot(merged1['price'])
 merged1['price'].plot()
@@ -253,14 +253,49 @@ fig, ax = plt.subplots(figsize=(8,8))
 ax.scatter(merged1['price'],merged1['price'])
 plt.show()
 
-
 merged1=merged1[merged1['price']<7000]
+
+merged1=merged1[merged1['price']>100]
 merged1.price.value_counts()
 
 
 
+############################################## ID ########################
+
+## Dropping the ID column
+
+merged1 = merged1.drop('id',axis=1)
+
+
+
+############################################## URL ########################
+
+## Dropping the URL column
+
+merged1 = merged1.drop('url',axis=1)
+
+
+
+############################################## Region URL ########################
+
+## Dropping the Region URL column
+
+merged1 = merged1.drop('region_url',axis=1)
+
+
 
 #############################################   SQFEET AREA  ############
+
+sns.boxplot(merged1['sqfeet'])
+merged1['sqfeet'].plot()
+plt.hist(merged1['sqfeet'].values)
+
+merged1.sqfeet.value_counts()
+temp = sorted(merged1['sqfeet'], reverse=True)
+
+merged1=merged1[merged1['sqfeet']<3300]
+
+merged1=merged1[merged1['sqfeet']>100]
 
 
 ###########Using IQR to find outliers########
@@ -287,17 +322,31 @@ UB = Q3+(1.5*IQR)
 merged1= merged[merged['sqfeet'].between(LB, UB)]
 sns.boxplot(merged1['sqfeet'])
 
+##########################################         TYPE ##################
+
+
+mean_encode = merged2.groupby('type')['price'].mean()
 
 
 
 
 
+######################################## LONGITUDE ##################
 
+merged1=merged1[merged1['long']>-130]
+plt.hist(merged1['long'].values)
 
+#### Colored Plot between longitude and latitude ####
+merged1.plot(kind="scatter", x="long", y="lat", alpha=0.4, figsize=(10,7),
+    c="price", cmap=plt.get_cmap("jet"), colorbar=True, sharex=False)
 
+# Helped us visualise that we can distribute the states and regions price/sqfeet  between 
+######################################## LATITUDE ##################
 
+merged1=merged1[merged1['lat']<50]
+merged1=merged1[merged1['lat']>20]
 
-
+plt.hist(merged1['lat'].values)
 
 
 
