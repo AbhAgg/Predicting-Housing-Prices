@@ -57,6 +57,7 @@ for col in x.columns:
 
 
 ####Making of a duplicate dataset to prevent overlapping 
+
 ##################################################### LAUNDRY ###################
 v=x
 ####Making the dummy variable for LAUNDRY_OPTIONS
@@ -258,7 +259,11 @@ merged1=merged1[merged1['price']<7000]
 merged1=merged1[merged1['price']>100]
 merged1.price.value_counts()
 
-
+##############################################   PRICE PER SQFEET ########################
+price_per_sqfeet = merged1['price']/merged1['sqfeet']
+price_per_sqfeet=price_per_sqfeet.to_frame(name="val")
+price_per_sqfeet = price_per_sqfeet.rename(columns = {"val":"price_per_sqfeet"})
+merged1 = pd.concat([merged1,price_per_sqfeet],axis=1)
 
 ############################################## ID ########################
 
@@ -322,14 +327,16 @@ UB = Q3+(1.5*IQR)
 merged1= merged[merged['sqfeet'].between(LB, UB)]
 sns.boxplot(merged1['sqfeet'])
 
-##########################################         TYPE ##################
+##########################################   TYPE and TYPE MEAN ENCODING  ##################
 
 
-mean_encode = merged2.groupby('type')['price'].mean()
+mean_encode = merged1.groupby('type')['price'].mean()
+merged1.loc[:,'type_mean_enc'] = merged1['type'].map(mean_encode)
+merged1 = merged1.drop('type',axis=1)
 
 
-
-
+####################   Saving to a CSV #################
+# merged2.to_csv('D:\\Python classes\\houseRent\\houseRent\\trew.csv',columns=['price','type'])
 
 ######################################## LONGITUDE ##################
 
@@ -340,6 +347,10 @@ plt.hist(merged1['long'].values)
 merged1.plot(kind="scatter", x="long", y="lat", alpha=0.4, figsize=(10,7),
     c="price", cmap=plt.get_cmap("jet"), colorbar=True, sharex=False)
 
+merged1 = merged1.drop('long',axis=1)
+
+
+
 # Helped us visualise that we can distribute the states and regions price/sqfeet  between 
 ######################################## LATITUDE ##################
 
@@ -348,7 +359,22 @@ merged1=merged1[merged1['lat']>20]
 
 plt.hist(merged1['lat'].values)
 
+merged1 = merged1.drop('lat',axis=1)
+
+##########################################   STATE and STATE MEAN ENCODING  ##################
+
+mean_encode = merged1.groupby('state')['price_per_sqfeet'].mean()
+merged1.loc[:,'state_mean_encoding'] = merged1['state'].map(mean_encode)
+merged1 = merged1.drop('state',axis=1)
+
+
+##########################################   REGION and REGION MEAN ENCODING  ##################
+
+mean_encode = merged1.groupby('region')['price_per_sqfeet'].mean()
+merged1.loc[:,'region_mean_encoding'] = merged1['region'].map(mean_encode)
+merged1 = merged1.drop('region',axis=1)
 
 
 
-######CLEANING DATA (Removing outliers)
+
+
