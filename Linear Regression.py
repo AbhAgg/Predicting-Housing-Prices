@@ -4,6 +4,42 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import scipy
 from scipy import stats
+from sklearn.linear_model import LinearRegression
+
+merged2=merged1
+y=merged2['price']
+x=merged2
+x = x.drop('price',axis=1)
+x = x.drop('price_per_sqfeet',axis=1)
+
+
+
+from sklearn.model_selection import train_test_split
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
+regressor = LinearRegression()
+regressor.fit(x_train, y_train)
+y_pred = regressor.predict(x_test)
+print('Linear Regression R squared": %.4f' % regressor.score(x_test, y_test))
+
+
+
+from sklearn import ensemble
+from sklearn.ensemble import GradientBoostingRegressor
+model = ensemble.GradientBoostingRegressor()
+model.fit(x_train, y_train)
+print('Gradient Boosting R squared": %.4f' % model.score(x_test, y_test))
+
+
+
+forest_reg = RandomForestRegressor(random_state=2)
+forest_reg.fit(x_train, y_train)
+print('Random Forest R squared": %.4f' % forest_reg.score(x_test, y_test))
+
+
+
+
+
+
 MyData=pd.read_csv("D:\Python classes\houseRent\houseRent\housing_train.csv")
 MyData.dtypes
 #### You can check the type of the Dataframe
